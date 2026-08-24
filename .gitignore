@@ -1,0 +1,30 @@
+﻿# Virtual environment
+venv/
+env/
+
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Instance folder (SQLite DB will live here later)
+instance/
+
+# Uploads (prescription images/PDFs - never commit patient data)
+uploads/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test cache
+.pytest_cache/
