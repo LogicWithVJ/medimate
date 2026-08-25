@@ -28,7 +28,11 @@ def create_app(config_class=Config):
 
     # Register Blueprints
     from app.routes.auth import auth_bp
+    from app.routes.profile import profile_bp
+    from app.routes.prescriptions import prescriptions_bp
     app.register_blueprint(auth_bp)
+    app.register_blueprint(profile_bp)
+    app.register_blueprint(prescriptions_bp)
 
     @app.route("/")
     def home():
