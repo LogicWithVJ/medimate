@@ -10,6 +10,7 @@ from app.utils.file_validation import (
     generate_safe_filename,
     MAX_FILE_SIZE_BYTES,
 )
+from app.services.image_preprocessing import preprocess_prescription_image
 
 prescriptions_bp = Blueprint("prescriptions", __name__)
 
@@ -17,8 +18,6 @@ prescriptions_bp = Blueprint("prescriptions", __name__)
 @prescriptions_bp.route("/prescriptions/upload", methods=["GET", "POST"])
 @login_required
 def upload_prescription():
-    # Only patients (or their profile) can upload prescriptions for themselves.
-    # Caregiver-on-behalf-of-patient uploads are a future enhancement.
     if current_user.role != "patient" or not current_user.patient_profile:
         flash("Only patients with a completed profile can upload prescriptions.", "error")
         return redirect(url_for("auth.dashboard"))
@@ -38,7 +37,6 @@ def upload_prescription():
             flash("Invalid file type. Only PNG, JPG, and PDF are allowed.", "error")
             return redirect(url_for("prescriptions.upload_prescription"))
 
-        # Check file size by reading into memory position
         file.seek(0, os.SEEK_END)
         file_size = file.tell()
         file.seek(0)
@@ -53,12 +51,37 @@ def upload_prescription():
         file_path = os.path.join(upload_folder, safe_filename)
         file.save(file_path)
 
+        file_type = get_file_type(file.filename)
+        processed_filename = None
+        status = "uploaded"
+
+        # Only images get preprocessed here. PDFs are handled in Phase 10,
+        # since they need page extraction before image preprocessing applies.
+        if file_type == "image":
+            processed_filename = f"processed_{safe_filename}"
+            processed_path = os.path.join(upload_folder, processed_filename)
+
+            success = preprocess_prescription_image(file_path, processed_path)
+
+            if success:
+                status = "preprocessed"
+            else:
+                # Preprocessing failed (corrupted/unreadable image) — flag it,
+                # but keep the original upload intact for manual review.
+                processed_filename = None
+                flash(
+                    "File uploaded, but automatic preprocessing failed. "
+                    "It will need manual review.",
+                    "error",
+                )
+
         prescription = Prescription(
             patient_id=current_user.patient_profile.id,
             original_filename=file.filename,
             stored_filename=safe_filename,
-            file_type=get_file_type(file.filename),
-            status="uploaded",
+            processed_filename=processed_filename,
+            file_type=file_type,
+            status=status,
         )
         db.session.add(prescription)
         db.session.commit()

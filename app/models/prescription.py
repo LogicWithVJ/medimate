@@ -6,10 +6,11 @@ class Prescription(db.Model):
     """
     Represents one uploaded prescription file (image or PDF).
 
-    This model only tracks the UPLOAD itself. The extracted text (OCR)
-    and structured medicine data (LLM output) will be added in later
-    phases as separate models/columns, keeping raw upload data cleanly
-    separated from AI-derived interpretation (medical safety requirement).
+    This model only tracks the UPLOAD and its PREPROCESSED version.
+    The extracted text (OCR) and structured medicine data (LLM output)
+    will be added in later phases as separate models/columns, keeping
+    raw upload data cleanly separated from AI-derived interpretation
+    (medical safety requirement).
     """
 
     __tablename__ = "prescriptions"
@@ -19,12 +20,12 @@ class Prescription(db.Model):
 
     original_filename = db.Column(db.String(255), nullable=False)
     stored_filename = db.Column(db.String(255), nullable=False, unique=True)
+    processed_filename = db.Column(db.String(255), nullable=True)
     file_type = db.Column(db.String(10), nullable=False)  # "image" or "pdf"
 
     uploaded_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
-    # Status tracks where this prescription is in the processing pipeline.
-    # "uploaded" -> "ocr_pending" -> "ocr_done" -> "verified" (future phases)
+    # Status pipeline: "uploaded" -> "preprocessed" -> "ocr_done" -> "verified" (future)
     status = db.Column(db.String(30), nullable=False, default="uploaded")
 
     patient = db.relationship("Patient", backref="prescriptions")
