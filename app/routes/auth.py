@@ -71,4 +71,4 @@ def logout():
 @auth_bp.route("/dashboard")
 @login_required
 def dashboard():
-    return f"Welcome {current_user.full_name} ({current_user.role}). This is a placeholder dashboard."
+    return render_template("dashboard.html")

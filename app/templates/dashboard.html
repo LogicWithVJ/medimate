@@ -1,0 +1,20 @@
+﻿{% extends "base.html" %}
+{% block content %}
+<h3>Welcome, {{ current_user.full_name }}</h3>
+<p>Role: {{ current_user.role }}</p>
+
+<div class="list-group mt-4">
+    {% if current_user.role == "patient" and not current_user.patient_profile %}
+        <a href="{{ url_for('profile.create_profile') }}" class="list-group-item list-group-item-action">Complete Your Profile</a>
+    {% elif current_user.role == "caregiver" and not current_user.caregiver_profile %}
+        <a href="{{ url_for('profile.create_profile') }}" class="list-group-item list-group-item-action">Complete Your Profile</a>
+    {% endif %}
+
+    {% if current_user.role == "patient" and current_user.patient_profile %}
+        <a href="{{ url_for('prescriptions.upload_prescription') }}" class="list-group-item list-group-item-action">Upload Prescription</a>
+        <a href="{{ url_for('prescriptions.my_prescriptions') }}" class="list-group-item list-group-item-action">My Prescriptions</a>
+    {% endif %}
+
+    <a href="{{ url_for('auth.logout') }}" class="list-group-item list-group-item-action text-danger">Log Out</a>
+</div>
+{% endblock %}
